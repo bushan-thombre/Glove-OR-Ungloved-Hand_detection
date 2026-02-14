@@ -1,0 +1,517 @@
+import os
+import cv2
+import json
+from ultralytics import YOLO
+
+def run_detection(input_folder, output_folder="output", confidence=0.5, model_path="best.pt"):
+    model = YOLO(model_path)
+
+    os.makedirs(output_folder, exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
+
+    for image_name in os.listdir(input_folder):
+        if not image_name.lower().endswith(('.jpg', '.png', '.jpeg')):
+            continue
+
+        image_path = os.path.join(input_folder, image_name)
+        image = cv2.imread(image_path)
+
+        if image is None:
+            print(f"Skipping unreadable image: {image_name}")
+            continue
+
+        results = model(image, conf=confidence)
+
+        detections = []
+
+        for result in results:
+            for box in result.boxes:
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                conf = float(box.conf[0])
+                cls_id = int(box.cls[0])
+                label = model.names[cls_id]
+
+                # EXACT FORMAT
+                detections.append({
+                    "label": label,
+                    "confidence": round(conf, 2),
+                    "bbox": [
+                        int(x1),
+                        int(y1),
+                        int(x2),
+                        int(y2)
+                    ]
+                })
+
+                # Draw bounding box
+                cv2.rectangle(image,
+                              (int(x1), int(y1)),
+                              (int(x2), int(y2)),
+                              (0, 255, 0), 2)
+
+                cv2.putText(image,
+                            f"{label} {conf:.2f}",
+                            (int(x1), int(y1) - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (0, 255, 0),
+                            2)
+
+        # Save annotated image
+        cv2.imwrite(os.path.join(output_folder, image_name), image)
+
+        # JSON EXACT STRUCTURE
+        json_data = {
+            "filename": image_name,
+            "detections": detections
+        }
+
+        with open(f"logs/{image_name}.json", "w") as f:
+            json.dump(json_data, f, indent=4)
+
+        print(f"Processed {image_name}")
+
+    print("All images processed successfully.")
+
+
+if __name__ == "__main__":
+    # Directly set input/output folders and confidence
+    input_folder = "test/images"
+    output_folder = "output"
+    confidence = 0.5
+    model_path = "/content/runs/detect/train2/weights/best.pt"
+
+    run_detection(input_folder, output_folder=output_folder, confidence=confidence, model_path=model_path)
+     
+0: 640x640 1 glove, 35.7ms
+Speed: 3.9ms preprocess, 35.7ms inference, 5.7ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq077_jpg.rf.adbbbeab8b3a8f91395bcbc899d6598c.jpg
+
+0: 640x640 1 glove, 33.2ms
+Speed: 5.5ms preprocess, 33.2ms inference, 4.8ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq117_jpg.rf.c6880e8e43d4c630cea27c54f5358faf.jpg
+
+0: 640x640 1 glove, 30.5ms
+Speed: 3.8ms preprocess, 30.5ms inference, 1.7ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq015_jpg.rf.e814b73f52eeda2d6c2faa852a37e0a5.jpg
+
+0: 640x640 1 glove, 34.7ms
+Speed: 4.5ms preprocess, 34.7ms inference, 5.6ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq076_jpg.rf.ab07f41b90f10ae43497c4419b67ab80.jpg
+
+0: 640x640 1 no_glove, 29.5ms
+Speed: 3.5ms preprocess, 29.5ms inference, 4.8ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3831_JPG.rf.7e44bac09a4db563a7f9bc33bb830a79.jpg
+
+0: 640x640 1 glove, 37.5ms
+Speed: 7.2ms preprocess, 37.5ms inference, 4.0ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq085_jpg.rf.bb93949dd2667804dce050fa969b2fda.jpg
+
+0: 640x640 1 glove, 19.7ms
+Speed: 6.2ms preprocess, 19.7ms inference, 3.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed w072_jpg.rf.309be5ce9d0af94ef9cb6257c058722d.jpg
+
+0: 640x640 1 no_glove, 23.8ms
+Speed: 4.3ms preprocess, 23.8ms inference, 7.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226133129_jpg.rf.56ff65ce8fa20e06542320e6b4587bd5.jpg
+
+0: 640x640 1 glove, 17.7ms
+Speed: 6.1ms preprocess, 17.7ms inference, 2.9ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq102_jpg.rf.08f33741326c3a5433f59fad17ad64e2.jpg
+
+0: 640x640 1 glove, 26.2ms
+Speed: 6.9ms preprocess, 26.2ms inference, 1.9ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq113_jpg.rf.3035f126a81f31acd2496713cd1257fc.jpg
+
+0: 640x640 1 no_glove, 29.0ms
+Speed: 8.1ms preprocess, 29.0ms inference, 4.0ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226133043_jpg.rf.b788463fa1ef8a69b60d9ffe4b1e3535.jpg
+
+0: 640x640 1 glove, 24.2ms
+Speed: 4.4ms preprocess, 24.2ms inference, 4.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w047_jpg.rf.7e67e79ab2c2b842f046eddff09f566a.jpg
+
+0: 640x640 1 no_glove, 24.5ms
+Speed: 5.2ms preprocess, 24.5ms inference, 16.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734224_jpg.rf.2c07dff6e2aeac765ba0fbc2e95c4cfb.jpg
+
+0: 640x640 1 no_glove, 16.0ms
+Speed: 3.1ms preprocess, 16.0ms inference, 3.7ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226234924_jpg.rf.0a86f1273ada688a4d76cde68c8f0daf.jpg
+
+0: 640x640 1 glove, 17.1ms
+Speed: 4.0ms preprocess, 17.1ms inference, 1.5ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq020_jpg.rf.31ea718331469c5e039c3ab2dd8fc94a.jpg
+
+0: 640x640 1 no_glove, 15.9ms
+Speed: 2.3ms preprocess, 15.9ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224170028_jpg.rf.4957f65b4089c279ace77bbb3d34c691.jpg
+
+0: 640x640 1 glove, 15.8ms
+Speed: 2.5ms preprocess, 15.8ms inference, 1.8ms postprocess per image at shape (1, 3, 640, 640)
+Processed w113_jpg.rf.31af384fc84917e75a08b0669c98ba01.jpg
+
+0: 640x640 1 no_glove, 16.0ms
+Speed: 2.1ms preprocess, 16.0ms inference, 2.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3900_JPG.rf.bd3237d0a7afd71fab6a4f61f96a7d87.jpg
+
+0: 640x640 1 no_glove, 13.9ms
+Speed: 2.3ms preprocess, 13.9ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734287_jpg.rf.a0667e4804396596c649252083c2712d.jpg
+
+0: 640x640 1 no_glove, 13.9ms
+Speed: 2.1ms preprocess, 13.9ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227135533_jpg.rf.20135c1541afbfd93b870acf1e516b9a.jpg
+
+0: 640x640 1 glove, 1 no_glove, 13.9ms
+Speed: 2.1ms preprocess, 13.9ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w068_jpg.rf.4e7be461e6a3932fbf1d2c72a6703022.jpg
+
+0: 640x640 1 no_glove, 13.8ms
+Speed: 2.3ms preprocess, 13.8ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224162653_jpg.rf.d74c1b8b73da34dd9456cf46bc29a6c6.jpg
+
+0: 640x640 1 no_glove, 13.6ms
+Speed: 2.7ms preprocess, 13.6ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227154259_jpg.rf.d4dd9e3efc999e662816cdd67b329939.jpg
+
+0: 640x640 1 glove, 13.6ms
+Speed: 2.3ms preprocess, 13.6ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq097_jpg.rf.2c7b0b2f31f8f31838da20b99cb69528.jpg
+
+0: 640x640 1 no_glove, 13.6ms
+Speed: 2.3ms preprocess, 13.6ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734302_jpg.rf.ab5d102efeca34c374fe4c7927e41fd2.jpg
+
+0: 640x640 1 no_glove, 13.0ms
+Speed: 2.5ms preprocess, 13.0ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3917_JPG.rf.1d6af80ed8230839802f2c5504919d3c.jpg
+
+0: 640x640 1 glove, 11.3ms
+Speed: 2.3ms preprocess, 11.3ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed w064_jpg.rf.72bf5ce2939c014b247162eb5927fb88.jpg
+
+0: 640x640 1 glove, 11.4ms
+Speed: 2.6ms preprocess, 11.4ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w006_jpg.rf.d0e78f930867bebc4f2583c977ae54c0.jpg
+
+0: 640x640 1 no_glove, 11.5ms
+Speed: 2.4ms preprocess, 11.5ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734230_jpg.rf.072aba429d0428716615b39da102e255.jpg
+
+0: 640x640 1 glove, 11.3ms
+Speed: 1.9ms preprocess, 11.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq050_jpg.rf.73a346485945078180571bcaabb12f14.jpg
+
+0: 640x640 1 glove, 11.0ms
+Speed: 2.3ms preprocess, 11.0ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed w058_jpg.rf.5a01d199cca8faf1c4a67e7cd7b6ebce.jpg
+
+0: 640x640 1 glove, 1 no_glove, 11.4ms
+Speed: 2.1ms preprocess, 11.4ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226143650_jpg.rf.0ba47b23e9e7ad87525a715dfd6c40e5.jpg
+
+0: 640x640 1 glove, 11.0ms
+Speed: 2.2ms preprocess, 11.0ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq116_jpg.rf.4acf428a2cc5a5b1ef4a4f454658283d.jpg
+
+0: 640x640 1 no_glove, 11.8ms
+Speed: 1.5ms preprocess, 11.8ms inference, 1.9ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3897_JPG.rf.35373799691e4c81893f2ad11792308a.jpg
+
+0: 640x640 1 glove, 13.4ms
+Speed: 2.0ms preprocess, 13.4ms inference, 2.0ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq122_jpg.rf.371e1e6250e0011b4bb57ac824044774.jpg
+
+0: 640x640 1 no_glove, 9.6ms
+Speed: 2.2ms preprocess, 9.6ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224232248_jpg.rf.dbe8ad7434f3887c08a6f4411ac4c5b5.jpg
+
+0: 640x640 1 glove, 9.8ms
+Speed: 2.1ms preprocess, 9.8ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 640)
+Processed w108_jpg.rf.012aa0a54e97d022275a4c9000e7aaba.jpg
+
+0: 640x640 1 no_glove, 9.5ms
+Speed: 2.1ms preprocess, 9.5ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3870_JPG.rf.8bddf212367091426098a44cc9a55730.jpg
+
+0: 640x640 1 no_glove, 9.6ms
+Speed: 2.1ms preprocess, 9.6ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227102741_jpg.rf.61f6a8fdd0e8fc38c88fc45ee8b9391f.jpg
+
+0: 640x640 1 glove, 9.3ms
+Speed: 2.1ms preprocess, 9.3ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq123_jpg.rf.a20bb5676110fc137b6278d66c9d0714.jpg
+
+0: 640x640 1 no_glove, 9.2ms
+Speed: 2.2ms preprocess, 9.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224232413_jpg.rf.80c61424996d5762ac68996541ad7a37.jpg
+
+0: 640x640 1 glove, 9.3ms
+Speed: 2.1ms preprocess, 9.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq080_jpg.rf.f986a1d77eb02eb6b6a2dd62af9f1661.jpg
+
+0: 640x640 1 glove, 1 no_glove, 9.3ms
+Speed: 2.1ms preprocess, 9.3ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224160807-1-_jpg.rf.0e6b5ef655e3ff4afbbd67f049b6a63b.jpg
+
+0: 640x640 1 glove, 9.3ms
+Speed: 1.7ms preprocess, 9.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w102_jpg.rf.8e893e1de8e6c0f0610bb2b3004c9ca8.jpg
+
+0: 640x640 1 no_glove, 8.7ms
+Speed: 1.5ms preprocess, 8.7ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224232012_jpg.rf.0304370a9cb7ab0365baccb6705fad26.jpg
+
+0: 640x640 1 glove, 8.7ms
+Speed: 3.1ms preprocess, 8.7ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq022_jpg.rf.2b352b3f52c0c02095a12dbba21d8cf1.jpg
+
+0: 640x640 1 no_glove, 8.7ms
+Speed: 2.0ms preprocess, 8.7ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227113608_jpg.rf.3fe36b5dc7c8e9ae301650e26ca2effc.jpg
+
+0: 640x640 1 glove, 8.7ms
+Speed: 2.0ms preprocess, 8.7ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w078_jpg.rf.b3c718aa354e44d915a8547c4a43ae5c.jpg
+
+0: 640x640 1 no_glove, 8.7ms
+Speed: 2.4ms preprocess, 8.7ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734264_jpg.rf.ad554d2de6dbd3f8ee142f04a4a423d4.jpg
+
+0: 640x640 1 no_glove, 8.6ms
+Speed: 2.3ms preprocess, 8.6ms inference, 1.8ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3911_JPG.rf.eee31e836a3912cc1614c1425f01b5fe.jpg
+
+0: 640x640 1 glove, 8.6ms
+Speed: 1.9ms preprocess, 8.6ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq038_jpg.rf.799bfd5186c25ded29ba5e70d19a9487.jpg
+
+0: 640x640 1 no_glove, 8.6ms
+Speed: 2.0ms preprocess, 8.6ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227154258_jpg.rf.4a665d111b468e32053b850ef0003f2a.jpg
+
+0: 640x640 1 no_glove, 8.6ms
+Speed: 1.9ms preprocess, 8.6ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220225102042_jpg.rf.e4739c623a82a61e6ebd8b792fb73c1e.jpg
+
+0: 640x640 1 no_glove, 8.6ms
+Speed: 1.9ms preprocess, 8.6ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734228_jpg.rf.5251709c5d6dc6c3dc1834c2dd7e9d83.jpg
+
+0: 640x640 1 glove, 8.3ms
+Speed: 2.1ms preprocess, 8.3ms inference, 1.6ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq025_jpg.rf.85d3ed88cc42fd8b4ce04c16670d199e.jpg
+
+0: 640x640 1 no_glove, 8.1ms
+Speed: 2.0ms preprocess, 8.1ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3877_JPG.rf.48c2425937e9d16f6efa32c175ddaeb2.jpg
+
+0: 640x640 1 no_glove, 8.1ms
+Speed: 1.5ms preprocess, 8.1ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734373_jpg.rf.4c8486ba8572c6888ce2be85fd330ffa.jpg
+
+0: 640x640 1 glove, 8.3ms
+Speed: 2.0ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w028_jpg.rf.b37995b0c5607518fe970b5ed4503317.jpg
+
+0: 640x640 1 glove, 8.5ms
+Speed: 2.5ms preprocess, 8.5ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq026_jpg.rf.f4c205cb40b2b48673ffe2aaf1e65ee1.jpg
+
+0: 640x640 1 no_glove, 8.4ms
+Speed: 2.3ms preprocess, 8.4ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3646_JPG.rf.a414d02b90bfcef79118ee16891f0a4a.jpg
+
+0: 640x640 1 no_glove, 8.5ms
+Speed: 2.1ms preprocess, 8.5ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3849_JPG.rf.7a8865f55fe0b4f978c1b4ff18d24315.jpg
+
+0: 640x640 1 glove, 8.4ms
+Speed: 2.0ms preprocess, 8.4ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq032_jpg.rf.9d78524d7fad653cdb4c055f6324e3dd.jpg
+
+0: 640x640 2 gloves, 8.3ms
+Speed: 2.3ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq023_jpg.rf.3aa7fc6d79f5324ed66250aa8e7ef6ba.jpg
+
+0: 640x640 1 glove, 8.3ms
+Speed: 2.2ms preprocess, 8.3ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq045_jpg.rf.390112185142e594e30b966ef95da369.jpg
+
+0: 640x640 1 no_glove, 8.4ms
+Speed: 2.3ms preprocess, 8.4ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224231707_jpg.rf.f60de50d501f2d9d61e34961d88da3a3.jpg
+
+0: 640x640 1 glove, 8.2ms
+Speed: 2.6ms preprocess, 8.2ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq042_jpg.rf.99ac1bb17bdf687602bb23c352836fee.jpg
+
+0: 640x640 1 no_glove, 8.2ms
+Speed: 2.2ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226195009_jpg.rf.4329f54093e4c5f5512504dd2081cab0.jpg
+
+0: 640x640 1 no_glove, 8.3ms
+Speed: 2.7ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3913_JPG.rf.6081911d6241474cf7a9988022ddb8f9.jpg
+
+0: 640x640 1 glove, 8.2ms
+Speed: 2.1ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq121_jpg.rf.d97c19f6eaf65da0cb455242209c5a5d.jpg
+
+0: 640x640 1 no_glove, 8.1ms
+Speed: 2.1ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224231810_jpg.rf.0c349d0d241e5ec1817736f67cbc3cdd.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 1.8ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq073_jpg.rf.479073ef2c106d4a823658c30a54d9d2.jpg
+
+0: 640x640 1 no_glove, 9.2ms
+Speed: 1.8ms preprocess, 9.2ms inference, 1.6ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734374_jpg.rf.c9bec62f6eed65187b6c3d073ee45f2e.jpg
+
+0: 640x640 1 no_glove, 8.0ms
+Speed: 2.0ms preprocess, 8.0ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3729_JPG.rf.6ad20fa780a53ebb9a566b914bce5ba6.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 2.1ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w001_jpg.rf.46ea06bbc43571689e287085121b4151.jpg
+
+0: 640x640 1 no_glove, 8.5ms
+Speed: 2.0ms preprocess, 8.5ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224172210_jpg.rf.893fde2d2ef4e33ab0acbab260c8d905.jpg
+
+0: 640x640 1 glove, 8.5ms
+Speed: 2.3ms preprocess, 8.5ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq089_jpg.rf.0a16352143f42b8abda9368854549e6d.jpg
+
+0: 640x640 1 no_glove, 8.5ms
+Speed: 2.2ms preprocess, 8.5ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734364_jpg.rf.4b1c97aede9c63188b6956c8241626e1.jpg
+
+0: 640x640 1 no_glove, 8.2ms
+Speed: 2.2ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227001610_jpg.rf.a4d54304bc76302dc4f49aa0acfda5c9.jpg
+
+0: 640x640 1 no_glove, 8.2ms
+Speed: 1.8ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3834_JPG.rf.58d4863267e14248def0dddc7b2fbf48.jpg
+
+0: 640x640 1 glove, 1 no_glove, 8.3ms
+Speed: 2.4ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq062_jpg.rf.d28bde236b1360e0d45e29bd29ecd399.jpg
+
+0: 640x640 1 no_glove, 8.3ms
+Speed: 2.1ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3643_JPG.rf.d528e53dd5d14069b8c8b2f7239691d9.jpg
+
+0: 640x640 1 glove, 8.2ms
+Speed: 2.0ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq074_jpg.rf.0de714293f9933bf03a8923e642c56b2.jpg
+
+0: 640x640 1 no_glove, 8.2ms
+Speed: 2.5ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224160840_jpg.rf.354959c9070c5b86c661a533feae83a6.jpg
+
+0: 640x640 1 glove, 1 no_glove, 9.7ms
+Speed: 2.1ms preprocess, 9.7ms inference, 1.7ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226225553_jpg.rf.fd54d46c9d78f0856553839a5636b7d8.jpg
+
+0: 640x640 1 glove, 11.5ms
+Speed: 2.6ms preprocess, 11.5ms inference, 1.7ms postprocess per image at shape (1, 3, 640, 640)
+Processed w100_jpg.rf.182c89b0ca748bb5d15503362fd0c355.jpg
+
+0: 640x640 1 glove, 8.3ms
+Speed: 2.5ms preprocess, 8.3ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed w033_jpg.rf.8a81aa75f435d5b83bd993180f369e5e.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 1.9ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq108_jpg.rf.332516b0d77cb3b912ec868bf61fb36b.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 2.4ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq001_jpg.rf.a06a8e8376c98e00599f7ef180f65df1.jpg
+
+0: 640x640 1 glove, 1 no_glove, 8.3ms
+Speed: 2.7ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220227135712_jpg.rf.71a7a045875b6adc57b30b5bc6f912af.jpg
+
+0: 640x640 1 no_glove, 8.3ms
+Speed: 2.1ms preprocess, 8.3ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224160928_jpg.rf.204ebb54112b265c2cecf3ff209ae236.jpg
+
+0: 640x640 1 no_glove, 8.3ms
+Speed: 1.6ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224231747_jpg.rf.d535d78c22b438ce8fb8bece76f496c5.jpg
+
+0: 640x640 1 no_glove, 8.3ms
+Speed: 2.2ms preprocess, 8.3ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 640)
+Processed 20220225_103259_jpg.rf.365765f491604a7376af4e8cf00f6d8b.jpg
+
+0: 640x640 1 glove, 8.3ms
+Speed: 2.8ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w094_jpg.rf.66be916169e0b250d548e9f0b799c6de.jpg
+
+0: 640x640 2 gloves, 9.1ms
+Speed: 1.6ms preprocess, 9.1ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq023_jpg.rf.0e55e719f27587e63a5a7fb1dd3f66da.jpg
+
+0: 640x640 1 no_glove, 9.5ms
+Speed: 1.5ms preprocess, 9.5ms inference, 1.4ms postprocess per image at shape (1, 3, 640, 640)
+Processed S__34734328_jpg.rf.a5897f7bb4f00f67593c92bf4b6a3528.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 2.3ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq086_jpg.rf.4df0a420bda156deb5a5d9de3f2e2e21.jpg
+
+0: 640x640 1 glove, 8.9ms
+Speed: 2.0ms preprocess, 8.9ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq118_jpg.rf.2586e5794dd4d02329345d01e2f29fea.jpg
+
+0: 640x640 1 glove, 8.2ms
+Speed: 2.0ms preprocess, 8.2ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq049_jpg.rf.165d0695dc6bb7851d980f5807191a4d.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 1.9ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w112_jpg.rf.6f9d460b5a9a749fbdfc915c29a589ae.jpg
+
+0: 640x640 1 no_glove, 8.1ms
+Speed: 2.2ms preprocess, 8.1ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG_3650_JPG.rf.d25a2b1576e687378bf47902a2295e1e.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 2.0ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w043_jpg.rf.b60f037ebb3e31d4a3d5da633aafee20.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 2.1ms preprocess, 8.1ms inference, 1.3ms postprocess per image at shape (1, 3, 640, 640)
+Processed w106_jpg.rf.5ace80439e68ee954b80ee905b72081f.jpg
+
+0: 640x640 1 no_glove, 8.1ms
+Speed: 2.7ms preprocess, 8.1ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224164705_jpg.rf.1f6ff0527f786e18ad04ffb61c3cb0f9.jpg
+
+0: 640x640 2 gloves, 8.1ms
+Speed: 2.6ms preprocess, 8.1ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed w014_jpg.rf.c0027ac2359b9511cf9323ac2cfc3ce6.jpg
+
+0: 640x640 1 no_glove, 8.0ms
+Speed: 1.9ms preprocess, 8.0ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220224232021_jpg.rf.b724cfe3ab00f37c5a9288c2b3f377e6.jpg
+
+0: 640x640 1 glove, 8.1ms
+Speed: 2.0ms preprocess, 8.1ms inference, 1.8ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq033_jpg.rf.9396159d1d8d2c3d9ee341020753feaa.jpg
+
+0: 640x640 1 no_glove, 8.3ms
+Speed: 2.0ms preprocess, 8.3ms inference, 1.1ms postprocess per image at shape (1, 3, 640, 640)
+Processed IMG20220226194054_jpg.rf.bb2e6dd277ff42eb58fb31ccf95c6e6f.jpg
+
+0: 640x640 1 glove, 8.3ms
+Speed: 1.9ms preprocess, 8.3ms inference, 1.2ms postprocess per image at shape (1, 3, 640, 640)
+Processed wq038_jpg.rf.ca6013b14cca0b89463b5ba2d48ecd71.jpg
+All images processed successfully.
